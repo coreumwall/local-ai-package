@@ -254,10 +254,10 @@ To update all containers to their latest versions (n8n, Open WebUI, etc.), run t
 
 ```bash
 # Stop all services
-docker compose -p localai -f docker-compose.yml -f supabase/docker/docker-compose.yml down
+docker compose -p localai -f docker-compose.yml --profile <your-profile> down
 
 # Pull latest versions of all containers
-docker compose -p localai -f docker-compose.yml -f supabase/docker/docker-compose.yml pull
+docker compose -p localai -f docker-compose.yml --profile <your-profile> pull
 
 # Start services again with your desired profile
 python start_services.py --profile <your-profile>
@@ -266,6 +266,7 @@ python start_services.py --profile <your-profile>
 Replace `<your-profile>` with one of: `cpu`, `gpu-nvidia`, `gpu-amd`, or `none`.
 
 Note: The `start_services.py` script itself does not update containers - it only restarts them or pulls them if you are downloading these containers for the first time. To get the latest versions, you must explicitly run the commands above.
+Note: Adding `--profile <your-profile>` to the docker compose commands ensure proper shutdown of the ollama containers, disposal of the `localai_default` network as well as update of the ollama docker images.
 
 ## Troubleshooting
 

@@ -46,27 +46,21 @@ def prepare_supabase_env():
     print("Copying .env in root to .env in supabase/docker...")
     shutil.copyfile(env_example_path, env_path)
 
-def stop_existing_containers():
+def stop_existing_containers(profile=None):
     """Stop and remove existing containers for our unified project ('localai')."""
     print("Stopping and removing existing containers for the unified project 'localai'...")
-    run_command([
-        "docker", "compose",
-        "-p", "localai",
+    cmd = ["docker", "compose", "-p", "localai"]
+    if profile and profile != "none":
+        cmd.extend(["--profile", profile])
+    cmd.extend([
         "-f", "docker-compose.yml",
-        "-f", "supabase/docker/docker-compose.yml",
         "down"
     ])
-
-def start_supabase():
-    """Start the Supabase services (using its compose file)."""
-    print("Starting Supabase services...")
-    run_command([
-        "docker", "compose", "-p", "localai", "-f", "supabase/docker/docker-compose.yml", "up", "-d"
-    ])
+    run_command(cmd)
 
 def start_local_ai(profile=None):
     """Start the local AI services (using its compose file)."""
-    print("Starting local AI services...")
+    print("Starting all local AI services...")
     cmd = ["docker", "compose", "-p", "localai"]
     if profile and profile != "none":
         cmd.extend(["--profile", profile])
@@ -226,16 +220,9 @@ def main():
     generate_searxng_secret_key()
     check_and_fix_docker_compose_for_searxng()
     
-    stop_existing_containers()
-    
-    # Start Supabase first
-    start_supabase()
-    
-    # Give Supabase some time to initialize
-    print("Waiting for Supabase to initialize...")
-    time.sleep(10)
-    
-    # Then start the local AI services
+    stop_existing_containers(args.profile)
+   
+    # Start all  local AI services
     start_local_ai(args.profile)
 
 if __name__ == "__main__":
