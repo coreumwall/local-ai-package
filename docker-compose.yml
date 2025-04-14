@@ -31,6 +31,14 @@ x-ollama: &service-ollama
     - OLLAMA_CONTEXT_LENGTH=8192
   volumes:
     - ollama_storage:/root/.ollama
+  healthcheck:
+    test:
+      - CMD-SHELL
+      - bash -c '</dev/tcp/localhost/11434' || exit 1
+    interval: 30s
+    timeout: 5s
+    retries: 5
+    start_period: 15s    
 
 x-init-ollama: &init-ollama
   image: ollama/ollama:latest
@@ -60,6 +68,15 @@ services:
     volumes:
         - ~/.flowise:/root/.flowise
     entrypoint: /bin/sh -c "sleep 3; flowise start"
+    healthcheck:
+      test:
+        [
+          "CMD", "wget", "--spider", "--no-verbose", "-T","1", "http://flowise:3001/","-O","/dev/null"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s       
 
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
@@ -71,6 +88,18 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - open-webui:/app/backend/data
+    healthcheck:
+      test:
+        [
+          "CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "http://open-webui:8080/health"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5     
+      start_period: 15s   
+    depends_on:
+      n8n:
+        condition: service_healthy       
 
   n8n-import:
     <<: *service-n8n
@@ -92,6 +121,15 @@ services:
       - n8n_storage:/home/node/.n8n
       - ./n8n/backup:/backup
       - ./shared:/data/shared
+    healthcheck:
+      test:
+        [
+          "CMD", "wget", "--spider", "--no-verbose", "-T","1", "http://n8n:5678/","-O","/dev/null"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     depends_on:
       n8n-import:
         condition: service_completed_successfully
@@ -104,6 +142,14 @@ services:
       - 6333:6333
     volumes:
       - qdrant_storage:/qdrant/storage
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - bash -c '</dev/tcp/localhost/6333' || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   caddy:
     container_name: caddy
@@ -131,6 +177,15 @@ services:
       options:
         max-size: "1m"
         max-file: "1"
+    healthcheck:
+      test:
+        [
+          "CMD", "wget", "--spider", "--no-verbose", "-T","1", "http://localhost:8001/","-O","/dev/null"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s        
 
   redis:
     container_name: redis
@@ -150,6 +205,12 @@ services:
       options:
         max-size: "1m"
         max-file: "1"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3    
+      start_period: 15s
 
   searxng:
     container_name: searxng
@@ -173,7 +234,13 @@ services:
       driver: "json-file"
       options:
         max-size: "1m"
-        max-file: "1"      
+        max-file: "1"   
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--no-verbose", "-T","1", "http://localhost:8080/healthz","-O","/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 3           
+      start_period: 15s
 
   ollama-cpu:
     profiles: ["cpu"]
