@@ -133,8 +133,8 @@ services:
       - SEARXNG_HOSTNAME=${SEARXNG_HOSTNAME:-":8006"}
       - LANGFUSE_HOSTNAME=${LANGFUSE_HOSTNAME:-":8007"}
       - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-internal}
-    cap_drop:
-      - ALL
+    # cap_drop:
+      # - ALL  # Temporarily commented out for first run
     cap_add:
       - NET_BIND_SERVICE
     logging:
@@ -272,9 +272,9 @@ services:
       timeout: 3s
       retries: 10
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - 127.0.0.1:5433:5432
     volumes:
@@ -287,8 +287,8 @@ services:
     restart: unless-stopped  
     volumes:
       - valkey-data:/data
-    cap_drop:
-      - ALL
+    # cap_drop:
+      # - ALL  # Temporarily commented out for first run
     cap_add:
       - SETGID
       - SETUID
@@ -316,8 +316,8 @@ services:
       - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
       - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}
       - UWSGI_THREADS=${SEARXNG_UWSGI_THREADS:-4}
-    cap_drop:
-      - ALL
+    # cap_drop:
+      # - ALL  # Temporarily commented out for first run
     cap_add:
       - CHOWN
       - SETGID
