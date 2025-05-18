@@ -12,10 +12,6 @@ volumes:
   langfuse_clickhouse_logs:
   langfuse_minio_data:
 
-networks:
-  host_network:
-    external: true
-
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
   environment:
@@ -57,9 +53,6 @@ x-init-ollama: &init-ollama
     # Change the name of the LLM and num_ctx as you see fit.
 
 services:
-  networks:
-  - host_network
-
   flowise:
     image: flowiseai/flowise
     restart: unless-stopped
@@ -121,8 +114,7 @@ services:
   caddy:
     container_name: caddy
     image: docker.io/library/caddy:2-alpine
-    networks:
-      - host_network
+    network_mode: host
     restart: unless-stopped
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro

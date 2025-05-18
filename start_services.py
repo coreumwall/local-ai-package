@@ -61,7 +61,7 @@ def start_supabase():
     """Start the Supabase services (using its compose file)."""
     print("Starting Supabase services...")
     run_command([
-        "docker", "compose", "-p", "localai", "-f", "supabase/docker/docker-compose.yml", "up", "-d"
+        "docker", "compose", "-p", "localai", "-f", "docker-compose.yml", "up", "-d", "postgres"
     ])
 
 def start_local_ai(profile=None):
@@ -219,9 +219,6 @@ def main():
                       help='Profile to use for Docker Compose (default: cpu)')
     args = parser.parse_args()
 
-    clone_supabase_repo()
-    prepare_supabase_env()
-    
     # Generate SearXNG secret key and check docker-compose.yml
     generate_searxng_secret_key()
     check_and_fix_docker_compose_for_searxng()
