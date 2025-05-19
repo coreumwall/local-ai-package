@@ -33,6 +33,8 @@ x-ollama: &service-ollama
   image: ollama/ollama:latest
   container_name: ollama
   restart: unless-stopped
+  expose:
+    - 11434/tcp
   environment:
     - OLLAMA_CONTEXT_LENGTH=8192
   volumes:
@@ -57,6 +59,8 @@ services:
     image: flowiseai/flowise
     restart: unless-stopped
     container_name: flowise
+    expose:
+      - 3000/tcp 
     environment:
       - FLOWISE_USERNAME=${FLOWISE_USERNAME}
       - FLOWISE_PASSWORD=${FLOWISE_PASSWORD}     
@@ -68,6 +72,8 @@ services:
     image: ghcr.io/open-webui/open-webui:main
     restart: unless-stopped
     container_name: open-webui
+    expose:
+      - 8080/tcp
     volumes:
       - open-webui:/app/backend/data
 
@@ -85,6 +91,8 @@ services:
     <<: *service-n8n
     container_name: n8n
     restart: unless-stopped
+    expose:
+      - 5678/tcp
     volumes:
       - n8n_storage:/home/node/.n8n
       - ./n8n/backup:/backup
@@ -97,6 +105,9 @@ services:
     image: qdrant/qdrant
     container_name: qdrant
     restart: unless-stopped
+    expose:
+      - 6333/tcp
+      - 6334/tcp
     volumes:
       - qdrant_storage:/qdrant/storage
 
@@ -108,6 +119,11 @@ services:
     ports:
       - 80:80/tcp
       - 443:443/tcp
+    expose:
+      - 2019/tcp
+      - 443/tcp
+      - 443/udp
+      - 80/tcp
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data:rw
@@ -134,6 +150,8 @@ services:
   langfuse-worker:
     image: langfuse/langfuse-worker:3
     restart: always
+    expose:
+     - 3030/tcp
     depends_on: &langfuse-depends-on
       postgres:
         condition: service_healthy    
@@ -190,6 +208,8 @@ services:
   langfuse-web:
     image: langfuse/langfuse:3
     restart: always
+    expose:
+      - 3000/tcp
     depends_on: *langfuse-depends-on
     environment:
       <<: *langfuse-worker-env
@@ -209,6 +229,10 @@ services:
     image: clickhouse/clickhouse-server
     restart: always
     user: "101:101"
+    expose:
+      - 8123/tcp
+      - 9000/tcp
+      - 9009/tcp
     environment:
       CLICKHOUSE_DB: default
       CLICKHOUSE_USER: clickhouse
@@ -226,6 +250,9 @@ services:
   minio:
     image: minio/minio
     restart: always
+    expose:
+      - 9000/tcp
+      - 9001/tcp
     entrypoint: sh
     # create the 'langfuse' bucket before starting the service
     command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
@@ -244,6 +271,8 @@ services:
   postgres:
     image: postgres:${POSTGRES_VERSION:-latest}
     restart: unless-stopped
+    expose:
+      - 5432/tcp
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 3s
@@ -261,6 +290,8 @@ services:
     image: docker.io/valkey/valkey:8-alpine
     command: valkey-server --save 30 1 --loglevel warning
     restart: unless-stopped  
+    expose:
+      - 6379/tcp  
     volumes:
       - valkey-data:/data
     cap_drop:
@@ -284,6 +315,8 @@ services:
     container_name: searxng
     image: docker.io/searxng/searxng:latest
     restart: unless-stopped
+    expose:
+      - 8080/tcp
     volumes:
       - ./searxng:/etc/searxng:rw
     environment:
