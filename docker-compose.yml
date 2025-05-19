@@ -206,6 +206,7 @@ services:
 
   langfuse-web:
     image: langfuse/langfuse:3
+    container_name: langfuse-web
     restart: always
     expose:
       - 3000/tcp
