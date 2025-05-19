@@ -65,8 +65,6 @@ services:
         - FLOWISE_PASSWORD=${FLOWISE_PASSWORD}  
     ports:
         - 3001:3001
-    extra_hosts:
-      - "host.docker.internal:host-gateway"        
     volumes:
         - ~/.flowise:/root/.flowise
     entrypoint: /bin/sh -c "sleep 3; flowise start"
@@ -77,8 +75,6 @@ services:
     container_name: open-webui
     ports:
       - "3000:8080"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - open-webui:/app/backend/data
 
