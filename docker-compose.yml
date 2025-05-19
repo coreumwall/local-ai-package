@@ -58,11 +58,10 @@ services:
     restart: unless-stopped
     container_name: flowise
     environment:
-        - PORT=3001
-        - FLOWISE_USERNAME=${FLOWISE_USERNAME}
-        - FLOWISE_PASSWORD=${FLOWISE_PASSWORD}  
+      - FLOWISE_USERNAME=${FLOWISE_USERNAME}
+      - FLOWISE_PASSWORD=${FLOWISE_PASSWORD}     
     volumes:
-        - ~/.flowise:/root/.flowise
+      - ~/.flowise:/root/.flowise
     entrypoint: /bin/sh -c "sleep 3; flowise start"
 
   open-webui:
