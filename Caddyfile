@@ -25,10 +25,10 @@
     reverse_proxy langfuse-web:3000
 }
 
-# Ollama API
-{$OLLAMA_HOSTNAME} {
-    reverse_proxy ollama:11434
-}
+# # Ollama API
+# {$OLLAMA_HOSTNAME} {
+#     reverse_proxy ollama:11434
+# }
 
 # Supabase
 {$SUPABASE_HOSTNAME} {
