@@ -25,7 +25,7 @@
     reverse_proxy langfuse-web:3000
 }
 
-# # Ollama API
+# # Ollama API - it is better not to expose this container, because it lacks authentication without further configuration
 # {$OLLAMA_HOSTNAME} {
 #     reverse_proxy ollama:11434
 # }
@@ -35,7 +35,7 @@
     reverse_proxy kong:8000
 }
 
-# # SearXNG
+# # SearXNG - it is better not to expose this container, because it lacks authentication without further configuration
 # {$SEARXNG_HOSTNAME} {
 #     encode zstd gzip
     
