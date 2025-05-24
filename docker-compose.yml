@@ -57,9 +57,6 @@ x-init-ollama: &init-ollama
     # Change the name of the LLM and num_ctx as you see fit.
 
 services:
-  networks:
-  - host_network
-
   flowise:
     image: flowiseai/flowise
     restart: unless-stopped
@@ -343,6 +340,15 @@ services:
       - "host.docker.internal:host-gateway"
     # If Archon has dependencies on other services in this compose file,
     # add them here, e.g., depends_on: - postgres
+
+  crawl4ai-rag:
+    image: mcp/crawl4ai-rag
+    container_name: crawl4ai-rag
+    restart: unless-stopped
+    ports:
+      - "8051:8051"
+    env_file:
+      - .env
 
   ollama-cpu:
     profiles: ["cpu"]
