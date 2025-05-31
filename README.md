@@ -54,6 +54,8 @@ results from up to 229 search services. Users are neither tracked nor profiled, 
 
 ✅ [**Langfuse**](https://langfuse.com/) - Open source LLM engineering platform for agent observability
 
+✅ [**LiteLLM**](https://litellm.ai/) - Call any LLM using the OpenAI format. Provides a consistent interface to Bedrock, Azure, OpenAI, Coher, Anthropic, Ollama, Sagemaker, HuggingFace, Replicate etc.
+
 ## Prerequisites
 
 Before you begin, make sure you have the following software installed:
@@ -163,29 +165,51 @@ If you're using a Mac with an M1 or newer processor, you can't expose your GPU t
 
    If you want to run Ollama on your mac, check the [Ollama homepage](https://ollama.com/) for installation instructions.
 
-#### For Mac users running OLLAMA locally
-
-If you're running OLLAMA locally on your Mac (not in Docker), you need to modify the OLLAMA_HOST environment variable in the n8n service configuration. Update the x-n8n section in your Docker Compose file as follows:
-
-```yaml
-x-n8n: &service-n8n
-  # ... other configurations ...
-  environment:
-    # ... other environment variables ...
-    - OLLAMA_HOST=host.docker.internal:11434
-```
-
-Additionally, after you see "Editor is now accessible via: http://localhost:5678/":
-
-1. Head to http://localhost:5678/home/credentials
-2. Click on "Local Ollama service"
-3. Change the base URL to "http://host.docker.internal:11434/"
-
 ### For everyone else
 
 ```bash
 python start_services.py --profile cpu
 ```
+
+### Starting Specific Services
+
+The `start_services.py` script also allows you to start only a specific subset of services using the `--services` flag. This is useful if you don't need the entire stack running.
+
+**Usage:**
+
+```bash
+python start_services.py --profile <your-profile> --services <service1>,<service2>,...
+```
+
+**Example:**
+
+To start only `litellm`, `ollama` (with the CPU profile), and `open-webui`:
+
+```bash
+python start_services.py --profile cpu --services litellm,ollama,open-webui
+```
+
+**Available services for the `--services` flag:**
+
+*   `flowise`
+*   `open-webui`
+*   `n8n`
+*   `qdrant`
+*   `neo4j`
+*   `caddy`
+*   `langfuse` (this will start all langfuse components: `langfuse-worker`, `langfuse-web`, `clickhouse`, `minio`, `postgres`, `redis`)
+*   `minio`
+*   `postgres`
+*   `redis`
+*   `searxng`
+*   `ollama` (starts the appropriate Ollama services based on the selected `--profile`)
+*   `litellm`
+
+**Important Notes:**
+
+*   **Supabase:** The Supabase stack (`supabase/docker/docker-compose.yml`) is always started first, regardless of the services specified.
+*   **Caddy:** The `caddy` service is automatically started if you select any other service to ensure web UIs and APIs are accessible.
+*   **Dependencies:** Service dependencies are automatically handled. For example, if you select `open-webui`, `ollama` will also be started as it's a dependency. Similarly, selecting `litellm` will start `ollama` and `redis`.
 
 ## Deploying to the Cloud
 
@@ -267,6 +291,34 @@ language model and Qdrant as your vector store.
 > workflows. While it’s not fully optimized for production environments, it
 > combines robust components that work well together for proof-of-concept
 > projects. You can customize it to meet your specific needs
+
+## Service Configuration Details
+
+### For Mac users running OLLAMA locally
+If you're running OLLAMA locally on your Mac (not in Docker), you need to modify the OLLAMA_HOST environment variable in the n8n service configuration. Update the x-n8n section in your Docker Compose file as follows:
+
+```yaml
+x-n8n: &service-n8n
+  # ... other configurations ...
+  environment:
+    # ... other environment variables ...
+    - OLLAMA_HOST=host.docker.internal:11434
+```
+
+Additionally, after you see "Editor is now accessible via: http://localhost:5678/":
+
+1. Head to http://localhost:5678/home/credentials
+2. Click on "Local Ollama service"
+3. Change the base URL to "http://host.docker.internal:11434/"
+
+### LiteLLM Configuration
+
+LiteLLM is included as an optional service to provide a unified API endpoint for various Large Language Models, including local ones running via Ollama.
+
+*   **Configuration:** LiteLLM's settings are managed in the `litellm/config.yaml` file.
+*   **Default Setup:** By default, the `config.yaml` is configured to connect to the local `ollama` service (specifically the `qwen2.5:7b-instruct-q4_K_M` model, assuming it's pulled by Ollama). You can easily adapt this to other Ollama models or other LLM providers.
+*   **Access:** When running, LiteLLM is proxied by Caddy and will be accessible based on the `LITELLM_HOSTNAME` environment variable in your `.env` file (e.g., `http://localhost:8009` or `https://litellm.yourdomain.com` if configured).
+*   **Advanced Configuration:** For more advanced setups, such as adding more models, configuring different providers (like OpenAI, Azure, Bedrock), setting up UI, or managing keys, please refer to the [**Official LiteLLM Documentation**](https://docs.litellm.ai/docs/).
 
 ## Upgrading
 
