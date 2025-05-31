@@ -15,8 +15,20 @@ import argparse
 import platform
 import sys
 
+# Global variable for the compose command
+COMPOSE_COMMAND = "docker"
+
 def run_command(cmd, cwd=None):
     """Run a shell command and print it."""
+    # Replace "docker" with the selected compose command if it's a compose operation
+    if cmd[0] == "docker" and cmd[1] == "compose":
+        # For compose commands, use COMPOSE_COMMAND directly (e.g., "docker compose" or "podman-compose")
+        cmd = [COMPOSE_COMMAND] + cmd[1:]
+    elif cmd[0] == "docker":
+        # For other docker commands like ps, exec, use the base command (e.g., "docker" or "podman")
+        base_cmd = COMPOSE_COMMAND.split("-")[0]
+        cmd = [base_cmd] + cmd[1:]
+
     print("Running:", " ".join(cmd))
     subprocess.run(cmd, cwd=cwd, check=True)
 
@@ -214,7 +226,16 @@ def main():
     parser = argparse.ArgumentParser(description='Start the local AI and Supabase services.')
     parser.add_argument('--profile', choices=['cpu', 'gpu-nvidia', 'gpu-amd', 'none'], default='cpu',
                       help='Profile to use for Docker Compose (default: cpu)')
+    parser.add_argument('--compose-command', choices=['docker', 'podman'], default='docker',
+                        help='Compose command to use (docker or podman, default: docker)')
     args = parser.parse_args()
+
+    global COMPOSE_COMMAND
+    if args.compose_command == 'podman':
+        COMPOSE_COMMAND = "podman-compose" # Podman uses podman-compose
+    else:
+        COMPOSE_COMMAND = "docker"
+
 
     clone_supabase_repo()
     prepare_supabase_env()

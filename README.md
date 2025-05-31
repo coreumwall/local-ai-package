@@ -131,6 +131,19 @@ Before running the services, you need to set up your environment variables for S
 
 The project includes a `start_services.py` script that handles starting both the Supabase and local AI services. The script accepts a `--profile` flag to specify which GPU configuration to use.
 
+### Using Podman Compose
+
+This project also supports Podman Compose as an alternative to Docker Compose. If you prefer to use Podman:
+
+1.  **Ensure Podman and Podman Compose are installed.** If you don't have them, you can find installation instructions on the [official Podman website](https://podman.io/getting-started/installation). Make sure `podman-compose` is installed, as this is what the script uses.
+2.  **Run `start_services.py` with the `--compose-command` flag:**
+
+    ```bash
+    python start_services.py --compose-command podman --profile <your-profile>
+    ```
+
+    Replace `<your-profile>` with your desired profile (e.g., `cpu`, `gpu-nvidia`). This will instruct the script to use `podman-compose` for all compose operations and `podman` for other container management commands.
+
 ### For Nvidia GPU users
 
 ```bash
