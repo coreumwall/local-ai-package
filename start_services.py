@@ -31,7 +31,7 @@ def clone_supabase_repo():
         os.chdir("supabase")
         run_command(["git", "sparse-checkout", "init", "--cone"])
         run_command(["git", "sparse-checkout", "set", "docker"])
-        run_command(["git", "checkout", "master"])
+        run_command(["git", "checkout", "tags/1.24.12"])
         os.chdir("..")
     else:
         print("Supabase repository already exists, updating...")
