@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local AI dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            max-width: 600px;
+            justify-content: center;
+        }
+        .button-container a {
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+            flex: 1 1 calc(33.333% - 30px);
+            box-sizing: border-box;
+            transition: background-color 0.3s ease;
+        }
+        .button-container a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="button-container">
+        <a href="http://localhost:5768" target="_blank" rel="noopener">n8n</a>
+        <a href="http://localhost:3000" target="_blank" rel="noopener">webUI</a>
+        <a href="http://localhost:3001" target="_blank" rel="noopener">flowise</a>
+        <a href="http://localhost:11434" target="_blank" rel="noopener">ollama</a>
+        <a href="http://localhost:8000" target="_blank" rel="noopener">supabase</a>
+        <a href="http://localhost:8080" target="_blank" rel="noopener">searxng</a>
+        <a href="http://localhost:6333/dashboard/" target="_blank" rel="noopener">qdrant</a>
+        <a href="http://localhost:3002" target="_blank" rel="noopener">langfuse</a>
+    </div>
+</body>
+</html>
