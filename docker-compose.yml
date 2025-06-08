@@ -18,6 +18,7 @@ volumes:
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
   environment:
+    - N8N_SECURE_COOKIE=false
     - DB_TYPE=postgresdb
     - DB_POSTGRESDB_HOST=db
     - DB_POSTGRESDB_USER=postgres
