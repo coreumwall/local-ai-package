@@ -77,6 +77,18 @@ def start_local_ai(profile=None, environment=None):
     cmd.extend(["up", "-d"])
     run_command(cmd)
 
+def start_crawl4ai():
+    """Start the crawl4ai service (using its compose file)."""
+    print("Starting crawl4ai service...")
+    # Use the same project name (-p localai) to ensure they're on the same network
+    cmd = [
+        "docker", "compose", 
+        "-p", "localai",
+        "-f", os.path.abspath(os.path.join("..", "crawl4ai", "docker-compose.yml")),
+        "up", "-d"
+    ]
+    run_command(cmd)
+
 def generate_searxng_secret_key():
     """Generate a secret key for SearXNG based on the current platform."""
     print("Checking SearXNG settings...")
@@ -243,6 +255,9 @@ def main():
 
     # Then start the local AI services
     start_local_ai(args.profile, args.environment)
+    
+    # Finally, start the crawl4ai service
+    start_crawl4ai()
 
 if __name__ == "__main__":
     main()
