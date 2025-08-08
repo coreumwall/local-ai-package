@@ -1,0 +1,92 @@
+services:
+  flowise:
+    image:
+    ports:
+      - 127.0.0.1:3001:3001
+
+  open-webui:
+    image:
+    ports:
+      - 127.0.0.1:8080:8080
+
+  n8n:
+    build:
+      context: ./services/n8n
+      dockerfile: Dockerfile
+    ports:
+      - 127.0.0.1:5678:5678
+
+  qdrant:
+    image:
+    ports:
+      - 127.0.0.1:6333:6333
+      - 127.0.0.1:6334:6334
+
+  neo4j:
+    image:
+    ports:
+      - 127.0.0.1:7473:7473
+      - 127.0.0.1:7474:7474
+      - 127.0.0.1:7687:7687
+
+  caddy:
+    container_name: caddy
+    build:
+      context: ./connexpay
+      dockerfile: services/caddy/Dockerfile
+
+  langfuse-worker:
+    image:
+    ports:
+      - 127.0.0.1:3030:3030
+
+  langfuse-web:
+    image:
+    ports:
+      - 127.0.0.1:3000:3000
+
+  clickhouse:
+    image:
+    ports:
+      - 127.0.0.1:8123:8123
+      - 127.0.0.1:9000:9000
+      - 127.0.0.1:9009:9009
+
+  minio:
+    image:
+    ports:
+      - 127.0.0.1:9010:9000
+      - 127.0.0.1:9011:9001
+
+  postgres:
+    image:
+    ports:
+      - 127.0.0.1:5433:5432
+
+  redis:
+    image:
+    ports:
+      - 127.0.0.1:6379:6379
+
+  searxng:
+    image:
+    ports:
+      - 127.0.0.1:8081:8080
+
+  ollama:
+    image:
+
+  ollama-cpu:
+    image:
+    ports:
+      - 127.0.0.1:11434:11434
+
+  ollama-gpu:
+    image:
+    ports:
+      - 127.0.0.1:11434:11434
+
+  ollama-gpu-amd:
+    image:
+    ports:
+      - 127.0.0.1:11434:11434
