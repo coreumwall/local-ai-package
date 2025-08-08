@@ -46,7 +46,10 @@ services:
       - 127.0.0.1:3000:3000
 
   clickhouse:
-    image:
+    container_name: clickhouse
+    build:
+      context: ./connexpay
+      dockerfile: services/clickhouse/Dockerfile
     ports:
       - 127.0.0.1:8123:8123
       - 127.0.0.1:9000:9000

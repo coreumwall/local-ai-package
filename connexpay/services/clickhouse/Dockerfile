@@ -1,16 +1,27 @@
-# Stage 1: Inherit upstream image
-FROM clickhouse/clickhouse-server AS base
+FROM clickhouse/clickhouse-server
 
-# Stage 2: ConnexPay wrapper
-FROM base AS wrapper
+# Temporarily disable SSL verification for apt
+RUN sed -i 's/https/http/g' /etc/apt/sources.list
 
-USER root
+# Install necessary tools
+RUN apt-get update && \
+    apt-get install -y \
+    ca-certificates \
+    curl \
+    openssl \
+    wget
 
-COPY ../../zscaler.crt /usr/local/share/ca-certificates/zscaler.crt
+# Copy your corporate certificate
+COPY ZscalerRootCertificate.crt /usr/local/share/ca-certificates/
 
-RUN apk --no-cache add ca-certificates && \
+# Add the certificate and update the certificate store
+RUN cp /usr/local/share/ca-certificates/ZscalerRootCertificate.crt /etc/ssl/certs/ && \
+    # Revert to HTTPS repositories
+    sed -i 's/http:/https:/g' /etc/apt/sources.list.d/* /etc/apt/sources.list || true && \
     update-ca-certificates
 
-ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-cert-zscaler.pem
-
-USER node
+# Create a script to verify certificate
+RUN echo '#!/bin/bash' > /verify-ssl.sh && \
+    echo 'echo "Verifying SSL connection..."' >> /verify-ssl.sh && \
+    echo 'curl -v https://deno.land' >> /verify-ssl.sh && \
+    chmod +x /verify-ssl.sh
