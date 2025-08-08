@@ -6,3 +6,9 @@ shared-backup/
 .env.test
 searxng/settings.yml
 searxng/uwsgi*
+.snapshots/
+*.crt
+
+# exceptions
+!connexpay/services/neo4j/
+!connexpay/services/neo4j/**

@@ -1,0 +1,39 @@
+services:
+  studio:
+    image:
+
+  kong:
+    image:
+
+  auth:
+    image:
+
+  rest:
+    image:
+
+  realtime:
+    image:
+
+  storage:
+    image:
+
+  imgproxy:
+    image:
+
+  meta:
+    image:
+
+  functions:
+    image:
+
+  analytics:
+    image:
+
+  db:
+    image:
+
+  vector:
+    image:
+
+  supavisor:
+    image:
