@@ -1,6 +1,9 @@
 services:
   flowise:
-    image:
+    container_name: flowise
+    build:
+      context: ./connexpay
+      dockerfile: services/flowise/Dockerfile
     ports:
       - 127.0.0.1:3001:3001
 
