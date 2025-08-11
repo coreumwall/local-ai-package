@@ -96,20 +96,23 @@ services:
       - 127.0.0.1:8081:8080
 
   ollama:
-    image:
+    container_name: ollama
+    build:
+      context: ./connexpay
+      dockerfile: services/ollama/Dockerfile
 
   ollama-cpu:
-    image:
+    container_name: ollama-cpu
     ports:
       - 127.0.0.1:11434:11434
 
   ollama-gpu:
-    image:
+    container_name: ollama-gpu
     ports:
       - 127.0.0.1:11434:11434
 
   ollama-gpu-amd:
-    image:
+    container_name: ollama-gpu-amd
     ports:
       - 127.0.0.1:11434:11434
 
