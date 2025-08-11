@@ -8,7 +8,10 @@ services:
       - 127.0.0.1:3001:3001
 
   open-webui:
-    image:
+    container_name: open-webui
+    build:
+      context: ./connexpay
+      dockerfile: services/open-webui/Dockerfile
     ports:
       - 127.0.0.1:8080:8080
 
