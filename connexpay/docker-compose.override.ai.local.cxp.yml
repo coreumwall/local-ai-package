@@ -13,9 +13,10 @@ services:
       - 127.0.0.1:8080:8080
 
   n8n:
+    container_name: n8n
     build:
-      context: ./services/n8n
-      dockerfile: Dockerfile
+      context: ./connexpay
+      dockerfile: services/n8n/Dockerfile
     ports:
       - 127.0.0.1:5678:5678
 
