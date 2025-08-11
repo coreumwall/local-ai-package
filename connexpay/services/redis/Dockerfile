@@ -1,22 +1,27 @@
-# Stage 1: Use a trusted Alpine builder with Zscaler injection
-FROM alpine:3.22 AS cert-setup
-
-# Inject the Zscaler cert
-COPY ../../zscaler.crt /usr/local/share/ca-certificates/zscaler.crt
-
-RUN apk add --no-cache ca-certificates && \
-    update-ca-certificates
-
-# Stage 2: Final Valkey image
 FROM docker.io/valkey/valkey:8-alpine
 
-USER root
+# Temporarily disable SSL verification for apk
+RUN sed -i 's/https/http/g' /etc/apk/repositories
 
-# Copy updated cert bundle from Stage 1
-COPY --from=cert-setup /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=cert-setup /etc/ssl/certs/ca-cert-zscaler.pem /etc/ssl/certs/ca-cert-zscaler.pem
+# Install necessary tools
+RUN apk update && \
+    apk add --no-cache \
+    ca-certificates \
+    curl \
+    openssl \
+    wget
 
-# Optional: Set env var if using Node or another tool that honors it
-ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-cert-zscaler.pem
+# Copy your corporate certificate
+COPY ZscalerRootCertificate.crt /usr/local/share/ca-certificates/ZscalerRootCertificate.crt
 
-USER valkey
+# Add the certificate and update the certificate store
+RUN cp /usr/local/share/ca-certificates/ZscalerRootCertificate.crt /etc/ssl/certs/ && \
+    # Revert to HTTPS repositories
+    sed -i 's/http/https/g' /etc/apk/repositories && \
+    update-ca-certificates
+
+# Create a script to verify certificate
+RUN echo '#!/bin/sh' > /verify-ssl.sh && \
+    echo 'echo "Verifying SSL connection..."' >> /verify-ssl.sh && \
+    echo 'curl -v https://deno.land' >> /verify-ssl.sh && \
+    chmod +x /verify-ssl.sh
