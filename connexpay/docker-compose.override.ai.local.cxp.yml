@@ -44,7 +44,10 @@ services:
       - 127.0.0.1:3030:3030
 
   langfuse-web:
-    image:
+    container_name: langfuse-web
+    build:
+      context: ./connexpay
+      dockerfile: services/langfuse-web/Dockerfile
     ports:
       - 127.0.0.1:3000:3000
 
