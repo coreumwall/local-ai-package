@@ -84,7 +84,10 @@ services:
       - 127.0.0.1:9011:9001
 
   postgres:
-    image:
+    container_name: postgres
+    build:
+      context: ./connexpay
+      dockerfile: services/postgres/Dockerfile
     ports:
       - 127.0.0.1:5433:5432
 
