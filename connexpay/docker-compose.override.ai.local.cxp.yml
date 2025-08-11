@@ -33,7 +33,10 @@ services:
       - 127.0.0.1:6334:6334
 
   neo4j:
-    image:
+    container_name: neo4j
+    build:
+      context: ./connexpay
+      dockerfile: services/neo4j/Dockerfile
     ports:
       - 127.0.0.1:7473:7473
       - 127.0.0.1:7474:7474
