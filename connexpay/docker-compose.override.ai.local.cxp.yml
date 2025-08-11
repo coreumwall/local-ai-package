@@ -20,6 +20,12 @@ services:
     ports:
       - 127.0.0.1:5678:5678
 
+  n8n-import:
+    container_name: n8n-import
+    build:
+      context: ./connexpay
+      dockerfile: services/n8n-import/Dockerfile
+
   qdrant:
     image:
     ports:
