@@ -1,0 +1,45 @@
+# see https://docs.searxng.org/admin/settings/settings.html#settings-use-default-settings
+use_default_settings: true
+server:
+  # base_url is defined in the SEARXNG_BASE_URL environment variable, see .env and docker-compose.yml
+  secret_key: "453060273c432f301bb6402b86b1697c7630d831f95fe6e3d3a9264e3b13840a"  # change this!
+  limiter: false
+  image_proxy: true
+ui:
+  static_use_hash: true
+redis:
+  url: redis://redis:6379/0
+search:
+    formats:
+        - html
+        - json
+outgoing:
+  request_timeout: 2.0       # default timeout in seconds, can be override by engine
+  max_request_timeout: 10.0  # the maximum timeout in seconds
+  useragent_suffix: ""       # information like an email address to the administrator
+  pool_connections: 100      # Maximum number of allowable connections, or null
+                             # for no limits. The default is 100.
+  pool_maxsize: 10           # Number of allowable keep-alive connections, or null
+                             # to always allow. The default is 10.
+  enable_http2: true         # See https://www.python-httpx.org/http2/
+  # uncomment below section if you want to use a custom server certificate
+  # see https://www.python-httpx.org/advanced/#changing-the-verification-defaults
+  # and https://www.python-httpx.org/compatibility/#ssl-configuration
+  verify: /etc/searxng/ZscalerRootCertificate.crt
+  #
+  # uncomment below section if you want to use a proxyq see: SOCKS proxies
+  #   https://2.python-requests.org/en/latest/user/advanced/#proxies
+  # are also supported: see
+  #   https://2.python-requests.org/en/latest/user/advanced/#socks
+  #
+  #  proxies:
+  #    all://:
+  #      - http://proxy1:8080
+  #      - http://proxy2:8080
+  #
+  #  using_tor_proxy: true
+  #
+  # Extra seconds to add in order to account for the time taken by the proxy
+  #
+  #  extra_proxy_timeout: 10.0
+  #

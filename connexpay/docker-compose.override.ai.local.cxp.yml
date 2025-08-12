@@ -103,7 +103,12 @@ services:
       - 127.0.0.1:6379:6379
 
   searxng:
-    image:
+    container_name: searxng
+    build:
+      context: ./connexpay
+      dockerfile: services/searxng/Dockerfile
+    volumes:
+      - ./connexpay/searxng:/etc/searxng:rw
     ports:
       - 127.0.0.1:8081:8080
 
