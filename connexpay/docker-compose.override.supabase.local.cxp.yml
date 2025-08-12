@@ -1,6 +1,9 @@
 services:
   studio:
-    image:
+    container-name: supabase-studio
+    build:
+      context: ./connexpay
+      dockerfile: services/supabase-studio/Dockerfile
 
   kong:
     image:
