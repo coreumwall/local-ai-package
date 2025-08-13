@@ -18,10 +18,16 @@ services:
       dockerfile: services/supabase-auth/Dockerfile
 
   realtime:
-    image:
+    container_name: realtime-dev.supabase-realtime
+    build:
+      context: ./connexpay
+      dockerfile: services/supabase-realtime/Dockerfile
 
   storage:
-    image:
+    container_name: supabase-storage
+    build:
+      context: ./connexpay
+      dockerfile: services/supabase-storage/Dockerfile
 
   imgproxy:
     image:
