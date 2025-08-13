@@ -30,7 +30,10 @@ services:
       dockerfile: services/supabase-storage/Dockerfile
 
   imgproxy:
-    image:
+    container-name: supabase-imgproxy
+    build:
+      context: ./connexpay
+      dockerfile: services/supabase-imgproxy/Dockerfile
 
   meta:
     image:
