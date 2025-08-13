@@ -60,7 +60,10 @@ services:
       dockerfile: services/supabase-db/Dockerfile
 
   vector:
-    image:
+    container_name: supabase-vector
+    build:
+      context: ./connexpay
+      dockerfile: services/supabase-vector/Dockerfile
 
   supavisor:
     image:
