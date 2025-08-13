@@ -66,4 +66,7 @@ services:
       dockerfile: services/supabase-vector/Dockerfile
 
   supavisor:
-    image:
+    container_name: supabase-pooler
+    build:
+      context: ./connexpay
+      dockerfile: services/supabase-pooler/Dockerfile
