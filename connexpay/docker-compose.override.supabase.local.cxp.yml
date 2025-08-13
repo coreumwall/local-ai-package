@@ -54,7 +54,10 @@ services:
       dockerfile: services/supabase-analytics/Dockerfile
 
   db:
-    image:
+    container_name: supabase-db
+    build:
+      context: ./connexpay
+      dockerfile: services/supabase-db/Dockerfile
 
   vector:
     image:
