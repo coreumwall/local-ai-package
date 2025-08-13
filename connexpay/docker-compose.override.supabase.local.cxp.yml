@@ -42,7 +42,10 @@ services:
       dockerfile: services/supabase-meta/Dockerfile
 
   functions:
-    image:
+    container_name: supabase-edge-functions
+    build:
+      context: ./connexpay
+      dockerfile: services/supabase-edge-functions/Dockerfile
 
   analytics:
     container-name: supabase-analytics
