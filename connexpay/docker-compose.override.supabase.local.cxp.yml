@@ -12,7 +12,10 @@ services:
       dockerfile: services/supabase-kong/Dockerfile
 
   auth:
-    image:
+    container-name: supabase-auth
+    build:
+      context: ./connexpay
+      dockerfile: services/supabase-auth/Dockerfile
 
   rest:
     image:
