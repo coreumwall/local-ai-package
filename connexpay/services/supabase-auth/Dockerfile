@@ -28,4 +28,4 @@ RUN echo '#!/bin/sh' > /verify-ssl.sh && \
     echo 'curl -v https://deno.land' >> /verify-ssl.sh && \
     chmod +x /verify-ssl.sh
 
-USER daemon
+USER 1000
