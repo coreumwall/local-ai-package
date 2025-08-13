@@ -36,7 +36,10 @@ services:
       dockerfile: services/supabase-imgproxy/Dockerfile
 
   meta:
-    image:
+    container-name: supabase-meta
+    build:
+      context: ./connexpay
+      dockerfile: services/supabase-meta/Dockerfile
 
   functions:
     image:
