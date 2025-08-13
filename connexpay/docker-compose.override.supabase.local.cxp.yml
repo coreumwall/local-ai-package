@@ -17,9 +17,6 @@ services:
       context: ./connexpay
       dockerfile: services/supabase-auth/Dockerfile
 
-  rest:
-    image:
-
   realtime:
     image:
 
