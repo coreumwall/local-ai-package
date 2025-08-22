@@ -17,7 +17,6 @@ volumes:
 
 x-n8n: &service-n8n
   image: n8nio/n8n:latest
-  command: start
   environment:
     - DB_TYPE=postgresdb
     - DB_POSTGRESDB_HOST=db
@@ -28,7 +27,6 @@ x-n8n: &service-n8n
     - N8N_PERSONALIZATION_ENABLED=false
     - N8N_ENCRYPTION_KEY
     - N8N_USER_MANAGEMENT_JWT_SECRET
-    - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
     - WEBHOOK_URL=${N8N_HOSTNAME:+https://}${N8N_HOSTNAME:-http://localhost:5678}
 
 x-ollama: &service-ollama
