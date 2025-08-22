@@ -1,0 +1,1 @@
+- this installation is running locally with gpu
