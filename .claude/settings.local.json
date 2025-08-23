@@ -10,7 +10,8 @@
       "Bash(grep:*)",
       "Bash(docker exec:*)",
       "Bash(docker run:*)",
-      "Bash(docker volume:*)"
+      "Bash(docker volume:*)",
+      "mcp__serena__read_file"
     ],
     "deny": [],
     "ask": []
