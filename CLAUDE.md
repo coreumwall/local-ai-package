@@ -2,125 +2,278 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Alpha Development Guidelines
 
-Local AI Package is a Docker Compose-based infrastructure for self-hosted AI development. It integrates multiple AI and low-code tools including n8n, Supabase, Ollama, Open WebUI, Flowise, Neo4j, Langfuse, SearXNG, and Caddy for a complete local AI development environment.
+**Local-only deployment** - each user runs their own instance.
 
-## Commands
+### Core Principles
 
-### Initial Setup
-```bash
-# Clone and setup
-git clone -b stable https://github.com/coleam00/local-ai-packaged.git
-cd local-ai-packaged
-cp .env.example .env  # Then configure all required secrets
+- **No backwards compatibility** - remove deprecated code immediately
+- **Detailed errors over graceful failures** - we want to identify and fix issues fast
+- **Break things to improve them** - alpha is for rapid iteration
 
-# Start services (choose appropriate profile)
-python start_services.py --profile gpu-nvidia  # For NVIDIA GPUs
-python start_services.py --profile gpu-amd     # For AMD GPUs on Linux
-python start_services.py --profile cpu         # For CPU-only
-python start_services.py --profile none        # When running Ollama separately
+### Error Handling
 
-# For public deployments
-python start_services.py --profile gpu-nvidia --environment public
+**Core Principle**: In alpha, we need to intelligently decide when to fail hard and fast to quickly address issues, and when to allow processes to complete in critical services despite failures. Read below carefully and make intelligent decisions on a case-by-case basis.
+
+#### When to Fail Fast and Loud (Let it Crash!)
+
+These errors should stop execution and bubble up immediately:
+
+- **Service startup failures** - If credentials, database, or any service can't initialize, the system should crash with a clear error
+- **Missing configuration** - Missing environment variables or invalid settings should stop the system
+- **Database connection failures** - Don't hide connection issues, expose them
+- **Authentication/authorization failures** - Security errors must be visible and halt the operation
+- **Data corruption or validation errors** - Never silently accept bad data, Pydantic should raise
+- **Critical dependencies unavailable** - If a required service is down, fail immediately
+- **Invalid data that would corrupt state** - Never store zero embeddings, null foreign keys, or malformed JSON
+
+#### When to Complete but Log Detailed Errors
+
+These operations should continue but track and report failures clearly:
+
+- **Batch processing** - When crawling websites or processing documents, complete what you can and report detailed failures for each item
+- **Background tasks** - Embedding generation, async jobs should finish the queue but log failures
+- **WebSocket events** - Don't crash on a single event failure, log it and continue serving other clients
+- **Optional features** - If projects/tasks are disabled, log and skip rather than crash
+- **External API calls** - Retry with exponential backoff, then fail with a clear message about what service failed and why
+
+#### Critical Nuance: Never Accept Corrupted Data
+
+When a process should continue despite failures, it must **skip the failed item entirely** rather than storing corrupted data:
+
+**❌ WRONG - Silent Corruption:**
+
+```python
+try:
+    embedding = create_embedding(text)
+except Exception as e:
+    embedding = [0.0] * 1536  # NEVER DO THIS - corrupts database
+    store_document(doc, embedding)
 ```
 
-### Service Management
-```bash
-# Stop all services
-docker compose -p localai -f docker-compose.yml --profile <your-profile> down
+**✅ CORRECT - Skip Failed Items:**
 
-# Update containers to latest versions
-docker compose -p localai -f docker-compose.yml --profile <your-profile> pull
-python start_services.py --profile <your-profile>
-
-# View logs
-docker compose -p localai logs -f [service-name]
+```python
+try:
+    embedding = create_embedding(text)
+    store_document(doc, embedding)  # Only store on success
+except Exception as e:
+    failed_items.append({'doc': doc, 'error': str(e)})
+    logger.error(f"Skipping document {doc.id}: {e}")
+    # Continue with next document, don't store anything
 ```
 
-### Testing Services
-```bash
-# Check service health
-curl http://localhost:5678  # n8n
-curl http://localhost:3000  # Open WebUI
-curl http://localhost:3001  # Flowise (if not using auth)
+**✅ CORRECT - Batch Processing with Failure Tracking:**
+
+```python
+def process_batch(items):
+    results = {'succeeded': [], 'failed': []}
+
+    for item in items:
+        try:
+            result = process_item(item)
+            results['succeeded'].append(result)
+        except Exception as e:
+            results['failed'].append({
+                'item': item,
+                'error': str(e),
+                'traceback': traceback.format_exc()
+            })
+            logger.error(f"Failed to process {item.id}: {e}")
+
+    # Always return both successes and failures
+    return results
 ```
 
-## Architecture
+#### Error Message Guidelines
 
-### Service Stack Structure
-The project uses a unified Docker Compose architecture with project name "localai":
-- **Supabase Stack**: Database, authentication, and vector storage (loaded from `supabase/docker/docker-compose.yml`)
-- **AI Stack**: n8n, Ollama, Open WebUI, Flowise, Qdrant, Neo4j, Langfuse, SearXNG
-- **Infrastructure**: Caddy for reverse proxy and HTTPS management
+- Include context about what was being attempted when the error occurred
+- Preserve full stack traces with `exc_info=True` in Python logging
+- Use specific exception types, not generic Exception catching
+- Include relevant IDs, URLs, or data that helps debug the issue
+- Never return None/null to indicate failure - raise an exception with details
+- For batch operations, always report both success count and detailed failure list
 
-### Key Components
+### Code Quality
 
-1. **n8n (port 5678)**: Low-code workflow automation with 400+ integrations
-   - Configured to use Supabase PostgreSQL as database
-   - Pre-loaded with AI agent workflows from `n8n/backup/`
-   - Integrates with Open WebUI via webhook
+- Remove dead code immediately rather than maintaining it - no backward compatibility or legacy functions
+- Prioritize functionality over production-ready patterns
+- Focus on user experience and feature completeness
+- When updating code, don't reference what is changing (avoid keywords like LEGACY, CHANGED, REMOVED), instead focus on comments that document just the functionality of the code
 
-2. **Supabase**: Complete backend-as-a-service
-   - PostgreSQL database (host: `db`)
-   - Vector storage for RAG applications
-   - Authentication services
-   - Kong API gateway
+## Architecture Overview
 
-3. **Ollama**: Local LLM runtime
-   - Automatically pulls qwen2.5:7b-instruct-q4_K_M and nomic-embed-text models
-   - Accessible at `http://ollama:11434` from within containers
+Archon V2 Alpha is a microservices-based knowledge management system with MCP (Model Context Protocol) integration:
 
-4. **Open WebUI (port 3000)**: ChatGPT-like interface
-   - Integrates with n8n agents via `n8n_pipe.py` function
-   - Connects to local Ollama instance
+- **Frontend (port 3737)**: React + TypeScript + Vite + TailwindCSS
+- **Main Server (port 8181)**: FastAPI + Socket.IO for real-time updates
+- **MCP Server (port 8051)**: Lightweight HTTP-based MCP protocol server
+- **Agents Service (port 8052)**: PydanticAI agents for AI/ML operations
+- **Database**: Supabase (PostgreSQL + pgvector for embeddings)
 
-5. **Flowise (port 3001)**: Visual AI agent builder
-   - Custom tools in `flowise/` directory for n8n integration
+## Development Commands
 
-6. **Neo4j**: Graph database for knowledge graphs (GraphRAG, LightRAG, Graphiti)
+### Frontend (archon-ui-main/)
 
-7. **Caddy**: HTTPS reverse proxy for production deployments
+```bash
+npm run dev              # Start development server on port 3737
+npm run build            # Build for production
+npm run lint             # Run ESLint
+npm run test             # Run Vitest tests
+npm run test:coverage    # Run tests with coverage report
+```
 
-### Environment Configuration
+### Backend (python/)
 
-Critical environment variables (from `.env`):
-- **n8n**: `N8N_ENCRYPTION_KEY`, `N8N_USER_MANAGEMENT_JWT_SECRET`
-- **Supabase**: `POSTGRES_PASSWORD`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`
-- **Neo4j**: `NEO4J_AUTH` (format: username/password)
-- **Langfuse**: Various secrets for observability
-- **Caddy** (production only): Domain names for each service
+```bash
+# Using uv package manager
+uv sync                  # Install/update dependencies
+uv run pytest            # Run tests
+uv run python -m src.server.main  # Run server locally
 
-### Deployment Modes
+# With Docker
+docker-compose up --build -d       # Start all services
+docker-compose logs -f             # View logs
+docker-compose restart              # Restart services
+```
 
-1. **Private (default)**: All ports exposed for local development
-2. **Public**: Only ports 80/443 exposed via Caddy, requires domain configuration
+### Testing
 
-### GPU Configuration Profiles
-- `gpu-nvidia`: NVIDIA GPU support via Docker GPU runtime
-- `gpu-amd`: AMD GPU support on Linux
-- `cpu`: CPU-only mode
-- `none`: Use external Ollama instance (Mac users with local Ollama)
+```bash
+# Frontend tests (from archon-ui-main/)
+npm run test:coverage:stream       # Run with streaming output
+npm run test:ui                    # Run with Vitest UI
 
-### Integration Points
+# Backend tests (from python/)
+uv run pytest tests/test_api_essentials.py -v
+uv run pytest tests/test_service_integration.py -v
+```
 
-1. **n8n ↔ Open WebUI**: Via webhook URL configured in n8n_pipe.py
-2. **n8n ↔ Supabase**: Direct database connection (host: `db`)
-3. **All services ↔ Ollama**: HTTP API at `http://ollama:11434`
-4. **Flowise ↔ n8n**: Custom tools for workflow triggering
+## Key API Endpoints
 
-### Data Persistence
+### Knowledge Base
 
-Docker volumes maintain state across restarts:
-- `n8n_storage`: Workflows and credentials
-- `ollama_storage`: Downloaded models
-- `open-webui`: Chat history and settings
-- `flowise`: Flow configurations
-- Supabase volumes in `supabase/docker/volumes/`
+- `POST /api/knowledge/crawl` - Crawl a website
+- `POST /api/knowledge/upload` - Upload documents (PDF, DOCX, MD)
+- `GET /api/knowledge/items` - List knowledge items
+- `POST /api/knowledge/search` - RAG search
 
-### Security Considerations
+### MCP Integration
 
-- All secrets must be generated securely (use `openssl rand -hex 32`)
-- Special characters in POSTGRES_PASSWORD may cause issues (avoid `@`)
-- In public mode, all services run behind Caddy with HTTPS
-- Default credentials exist for development but must be changed for production
+- `GET /api/mcp/health` - MCP server status
+- `POST /api/mcp/tools/{tool_name}` - Execute MCP tool
+- `GET /api/mcp/tools` - List available tools
+
+### Projects & Tasks (when enabled)
+
+- `GET /api/projects` - List projects
+- `POST /api/projects` - Create project
+- `GET /api/projects/{id}/tasks` - Get project tasks
+- `POST /api/projects/{id}/tasks` - Create task
+
+## Socket.IO Events
+
+Real-time updates via Socket.IO on port 8181:
+
+- `crawl_progress` - Website crawling progress
+- `project_creation_progress` - Project setup progress
+- `task_update` - Task status changes
+- `knowledge_update` - Knowledge base changes
+
+## Environment Variables
+
+Required in `.env`:
+
+```bash
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your-service-key-here
+```
+
+Optional:
+
+```bash
+OPENAI_API_KEY=your-openai-key        # Can be set via UI
+LOGFIRE_TOKEN=your-logfire-token      # For observability
+LOG_LEVEL=INFO                         # DEBUG, INFO, WARNING, ERROR
+```
+
+## File Organization
+
+### Frontend Structure
+
+- `src/components/` - Reusable UI components
+- `src/pages/` - Main application pages
+- `src/services/` - API communication and business logic
+- `src/hooks/` - Custom React hooks
+- `src/contexts/` - React context providers
+
+### Backend Structure
+
+- `src/server/` - Main FastAPI application
+- `src/server/api_routes/` - API route handlers
+- `src/server/services/` - Business logic services
+- `src/mcp/` - MCP server implementation
+- `src/agents/` - PydanticAI agent implementations
+
+## Database Schema
+
+Key tables in Supabase:
+
+- `sources` - Crawled websites and uploaded documents
+- `documents` - Processed document chunks with embeddings
+- `projects` - Project management (optional feature)
+- `tasks` - Task tracking linked to projects
+- `code_examples` - Extracted code snippets
+
+## Common Development Tasks
+
+### Add a new API endpoint
+
+1. Create route handler in `python/src/server/api_routes/`
+2. Add service logic in `python/src/server/services/`
+3. Include router in `python/src/server/main.py`
+4. Update frontend service in `archon-ui-main/src/services/`
+
+### Add a new UI component
+
+1. Create component in `archon-ui-main/src/components/`
+2. Add to page in `archon-ui-main/src/pages/`
+3. Include any new API calls in services
+4. Add tests in `archon-ui-main/test/`
+
+### Debug MCP connection issues
+
+1. Check MCP health: `curl http://localhost:8051/health`
+2. View MCP logs: `docker-compose logs archon-mcp`
+3. Test tool execution via UI MCP page
+4. Verify Supabase connection and credentials
+
+## Code Quality Standards
+
+We enforce code quality through automated linting and type checking:
+
+- **Python 3.12** with 120 character line length
+- **Ruff** for linting - checks for errors, warnings, unused imports, and code style
+- **Mypy** for type checking - ensures type safety across the codebase
+- **Auto-formatting** on save in IDEs to maintain consistent style
+- Run `uv run ruff check` and `uv run mypy src/` locally before committing
+
+## MCP Tools Available
+
+When connected to Cursor/Windsurf:
+
+- `archon:perform_rag_query` - Search knowledge base
+- `archon:search_code_examples` - Find code snippets
+- `archon:manage_project` - Project operations
+- `archon:manage_task` - Task management
+- `archon:get_available_sources` - List knowledge sources
+
+## Important Notes
+
+- Projects feature is optional - toggle in Settings UI
+- All services communicate via HTTP, not gRPC
+- Socket.IO handles all real-time updates
+- Frontend uses Vite proxy for API calls in development
+- Python backend uses `uv` for dependency management
+- Docker Compose handles service orchestration

@@ -11,7 +11,11 @@
       "Bash(docker exec:*)",
       "Bash(docker run:*)",
       "Bash(docker volume:*)",
-      "mcp__serena__read_file"
+      "mcp__serena__read_file",
+      "Bash(curl:*)",
+      "Bash(docker:*)",
+      "Bash(dos2unix:*)",
+      "Bash(nvidia-smi:*)"
     ],
     "deny": [],
     "ask": []
